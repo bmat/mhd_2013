@@ -3,6 +3,9 @@ import pyella
 import re
 
 import gdata.photos.service
+from get_words import get_words
+
+#Google Photo Service
 gd_client = gdata.photos.service.PhotosService()
 gd_client.password = "mhdvideoclipr"
 gd_client.email = "videoclipr@gmail.com"
@@ -99,10 +102,13 @@ class search:
         if not self.lyric:
             self.error = "Can't found lyrics for this song. :("
         if self.lyric:
+            self.words = get_words(self.lyric)
             self.lyric = re.sub(r"\n", "<br/>", self.lyric)
-            phs = gd_client.SearchCommunityPhotos(track.get_artist(), limit='10')
-            self.photos = [p.content.src for p in phs.entry]
-            
+            self.photos = []
+            for key in self.words:
+                word = self.words[key][0][0]
+                phs = gd_client.SearchCommunityPhotos(word, limit='2')
+                self.photos.extend([p.content.src for p in phs.entry])
         main = unicode(render.main(self))
         return return_composite_parts(main)
 
