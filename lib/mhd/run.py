@@ -1,9 +1,57 @@
 import os, web, json
 import pyella
 import re
+import random
 
 import gdata.photos.service
 from get_words import get_words
+from get_lyrics import get_lyrics
+
+import os
+import sys
+import time
+from urllib import FancyURLopener
+import urllib2
+import simplejson
+
+
+def search_images(query):
+    # Define search term
+    searchTerm = query
+    # Replace spaces ' ' in search term for '%20' in order to comply with request
+    searchTerm = searchTerm.replace(' ','%20')
+    # Start FancyURLopener with defined version 
+    class MyOpener(FancyURLopener):
+        version = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11'
+    myopener = MyOpener()
+
+    # Set count to 0
+    count= 0
+    images = []
+    for i in range(0,1):
+        # Notice that the start changes for each iteration in order to request a new set of images for each loop
+        url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 'v=1.0&q='+searchTerm+'&start='+str(i*4)+'&userip=MyIP')
+        print url
+        request = urllib2.Request(url, None, {'Referer': 'testing'})
+        response = urllib2.urlopen(request)
+
+        # Get results using JSON
+        results = simplejson.load(response)
+        data = results['responseData']
+        dataInfo = data['results']
+
+        # Iterate for each result and get unescaped url
+        for myUrl in dataInfo:
+            count = count + 1
+            if count > 1:
+                break;
+            print myUrl['unescapedUrl']
+            images.append(myUrl['unescapedUrl'])
+            #myopener.retrieve(myUrl['unescapedUrl'],str(count)+'.jpg')
+
+        # Sleep for one second to prevent IP blocking from Google
+        time.sleep(1)
+    return images
 
 #Google Photo Service
 gd_client = gdata.photos.service.PhotosService()
@@ -78,8 +126,9 @@ def return_composite_parts(main):
 class search:
     def GET(self):
         self.lyric = ""
-        self.word = None
+        self.words = None
         self.error = None
+        self.photos = []
         data = web.input()
         query = data.get("q")
         print "Finding track %s" % query
@@ -88,6 +137,7 @@ class search:
             track = results[0]
             print track.get_mbid(), track.get_title(), track.get_artist_name()
             print track.get_attribute("rhythm_bpm_value")
+            print track.get_audio()
             links = track.get_links()
             mblink = links[3][1]
             if mblink:
@@ -104,16 +154,25 @@ class search:
             self.error = "Can't found lyrics for this song. :("
         if self.lyric:
             self.words = get_words(self.lyric)
-            self.lyric = re.sub(r"\n", "<br/>", self.lyric)
+            #self.lyric = re.sub(r"\n", "<br/>", self.lyric)
             self.photos = []
-            for count, key in enumerate(self.words):
-                if count > 3:
-                    break;
-                word = self.words[key][0][0]
-                print "Finding photos for word %s" % word
-                phs = gd_client.SearchCommunityPhotos(word, limit='2')
-                print [p.content.src for p in phs.entry]
-                self.photos.extend([p.content.src for p in phs.entry])
+            self.lyrics = get_lyrics(self.lyric)
+            #for count, key in enumerate(self.words):
+            #    word = self.words[key][0][0]
+            #    print "Finding photos for word %s" % word
+            #    phs = gd_client.SearchCommunityPhotos(word, limit='20')
+            #    photos_array = [p.content.src for p in phs.entry]
+            #    #photos_array = search_images(word)
+            for i, item in enumerate(self.lyrics):
+                keyword = item[1]
+                print 'keyword:', keyword
+                #phs = gd_client.SearchCommunityPhotos(keyword, limit='1')
+                #self.photos.extend([p.content.src for p in phs.entry])
+                if i > 6:
+                    break
+                photos_array = search_images(keyword)
+                random.shuffle(photos_array)
+                self.photos.extend(photos_array)
         main = unicode(render.main(self))
         return return_composite_parts(main)
 
