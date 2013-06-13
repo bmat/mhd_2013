@@ -1,0 +1,9 @@
+#!/bin/bash
+
+env_path=$0
+
+ROOT=$(cd $(dirname $env_path); pwd)
+export PYTHONPATH=$PYTHONPATH${PYTHONPATH:+:}$ROOT/lib
+export PATH=$PATH:$ROOT/bin
+
+exec "$@"
