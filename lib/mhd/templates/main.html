@@ -8,4 +8,9 @@ $def with (obj)
           </div>
         </div>
       </div>
-    </header>
+      </header>
+
+      <div id="bg_images" style="display:none;">
+$for img in obj.photos:
+    <img src="$:img">
+</div>

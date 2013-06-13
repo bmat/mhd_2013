@@ -2,6 +2,17 @@ import os, web, json
 import pyella
 import re
 
+import gdata.photos.service
+gd_client = gdata.photos.service.PhotosService()
+gd_client.password = "mhdvideoclipr"
+gd_client.email = "videoclipr@gmail.com"
+gd_client.ProgrammaticLogin()
+
+#
+#
+#for p in photos.entry:
+#    print p.content.src
+
 # render
 render = web.template.render( os.path.dirname(__file__) + '/templates/')
 
@@ -38,6 +49,9 @@ def get_musixmatch_lyric(mbid, type_track="track_mbid"):
            "apikey=%s&format=json" % (type_track, mbid, apikey))
     json = request_to_json(url)
     print json
+    #TODO: Check if the message is correct
+    if json['message']['header']['status_code'] in [404, 401]:
+        return None
     return json['message']['body']['subtitle']['subtitle_body']
 
 
@@ -46,6 +60,8 @@ def get_musixmatch_lyric_by_query(query):
             "track.search?q=%s&f_has_lyrics=1&format=json&apikey=%s"
            % (query, apikey))
     json = request_to_json(url)
+    if json['message']['header']['status_code'] in [404, 401]:
+        return None
     track_id = json['message']['body']['track_list'][0]['track']['track_id']
     print track_id
     return get_musixmatch_lyric(track_id, "track_id")
@@ -59,6 +75,7 @@ def return_composite_parts(main):
 class search:
     def GET(self):
         self.lyric = ""
+        self.error = None
         data = web.input()
         query = data.get("q")
         print "Finding track %s" % query
@@ -78,9 +95,14 @@ class search:
                 print "No MusicBrainz ID found... trying with musixmatch"
                 self.lyric = get_musixmatch_lyric_by_query(track.get_title())
         else:
-            self.lyric = "Not found the lyric :("
-        print self.lyric
-        self.lyric = re.sub(r"\n", "<br/>", self.lyric)
+            self.error = "Music not found in ELLA! Please try another song"
+        if not self.lyric:
+            self.error = "Can't found lyrics for this song. :("
+        if self.lyric:
+            self.lyric = re.sub(r"\n", "<br/>", self.lyric)
+            phs = gd_client.SearchCommunityPhotos(track.get_artist(), limit='10')
+            self.photos = [p.content.src for p in phs.entry]
+            
         main = unicode(render.main(self))
         return return_composite_parts(main)
 
