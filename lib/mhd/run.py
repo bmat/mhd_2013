@@ -78,6 +78,7 @@ def return_composite_parts(main):
 class search:
     def GET(self):
         self.lyric = ""
+        self.word = None
         self.error = None
         data = web.input()
         query = data.get("q")
@@ -105,9 +106,13 @@ class search:
             self.words = get_words(self.lyric)
             self.lyric = re.sub(r"\n", "<br/>", self.lyric)
             self.photos = []
-            for key in self.words:
+            for count, key in enumerate(self.words):
+                if count > 3:
+                    break;
                 word = self.words[key][0][0]
+                print "Finding photos for word %s" % word
                 phs = gd_client.SearchCommunityPhotos(word, limit='2')
+                print [p.content.src for p in phs.entry]
                 self.photos.extend([p.content.src for p in phs.entry])
         main = unicode(render.main(self))
         return return_composite_parts(main)
