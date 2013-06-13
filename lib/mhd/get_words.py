@@ -42,13 +42,15 @@ def get_words(sentence):
 
     time_lines = []
 
+    print 'good_lines:', good_lines
+
     for line in good_lines:
         for item in c.iteritems():
-            if item[0] in line[1].split(' '):
+            if item[0] in line[1].split(' ') and item[1] > 1:
                 item = item + (line[0],)
                 time_lines.append(item)
 
-    print time_lines
+    print 'time_lines:', time_lines
 
     good_time_lines = dict()
 
