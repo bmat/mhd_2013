@@ -74,11 +74,45 @@ os.chdir(abspath)
 
 urls = (
     '/', 'init',
-    '/search', 'search'
+    '/search', 'search',
+    '/player', 'player',
     )
 app = web.application(urls, globals())
 
 apikey = "905e7eec68193e3f0a81a75591b4a518"
+
+
+class videclipr(object):
+
+    def __init__(self):
+        self.lyrics = None
+        self.subtitles = None
+        self.images = None
+        self.title = None
+        self.artist = None
+        self.bpm = None
+        self.moods = None
+        self.audio = None
+
+    def toJSON(self):
+        j = dict()
+        j['lyrics'] = self.lyrics
+        j['subtitles'] = self.subtitles
+        j['images'] = self.images
+        j['title'] = self.title
+        j['artist'] = self.artist
+        j['bpm'] = self.bpm
+        j['moods'] = self.moods
+        return json.dumps(j)
+
+    def setLyric(self, lyric):
+        self.lyrics = get_lyrics(lyric)
+
+
+    def set_photos(self, photos):
+        print photos
+        self.images = photos
+        print self.images
 
 def get_mbi_from_url(url):
     mbi = url.replace("http://musicbrainz.org/track/", "")
@@ -129,12 +163,19 @@ class init:
         main = unicode(render.start(self))
         return return_composite_parts(main)
 
+class player:
+    def GET(self):
+        main = unicode(render.main(self))
+        return return_composite_parts(main)
+
+
 class search:
     def GET(self):
         self.lyric = ""
         self.words = None
         self.error = None
         self.photos = []
+        obj = videclipr()
         data = web.input()
         query = data.get("q")
         print "Finding track %s" % query
@@ -144,6 +185,10 @@ class search:
             print track.get_mbid(), track.get_title(), track.get_artist_name()
             print track.get_attribute("rhythm_bpm_value")
             print track.get_audio()
+            obj.title = track.get_title()
+            obj.artist = track.get_artist_name()
+            obj.bpm = track.get_attribute("rhythm_bpm_value")
+            obj.audio = track.get_audio()
             links = track.get_links()
             mblink = links[3][1]
             if mblink:
@@ -151,9 +196,11 @@ class search:
                 mbid = get_mbi_from_url(mblink)
                 self.lyric = get_musixmatch_lyric(mbid)
                 print self.lyric
+                obj.setLyric(self.lyric)
             else:
                 print "No MusicBrainz ID found... trying with musixmatch"
                 self.lyric = get_musixmatch_lyric_by_query(track.get_title())
+                obj.setLyric(self.lyric)
         else:
             self.error = "Music not found in ELLA! Please try another song"
         if not self.lyric:
@@ -179,8 +226,10 @@ class search:
                 photos_array = search_images(keyword)
                 random.shuffle(photos_array)
                 self.photos.extend(photos_array)
-        main = unicode(render.main(self))
-        return return_composite_parts(main)
+                obj.set_photos(self.photos)
+        #main = unicode(render.main(self))
+        #return return_composite_parts(main)
+        return obj.toJSON()
 
     def POST(self):
         main = unicode(render.main(self))
