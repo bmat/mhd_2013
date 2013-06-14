@@ -189,7 +189,7 @@ class search:
         obj = videclipr()
         data = web.input()
         query = data.get("q")
-        next_song = int(data.get('next'))
+        next_song = int(data.get('next', 0))
         print "Finding track %s" % query
         results = pyella.search_tracks(query, "fulltracks").get_next_page()
         print results
