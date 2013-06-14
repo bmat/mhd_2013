@@ -1,4 +1,5 @@
 from collections import Counter
+import get_words
 import nltk
 import re
 
@@ -29,25 +30,32 @@ def get_lyrics(sentence):
 
     return good_lines
 
-def get_image_lyrics(sentence):
-    lyrics = get_lyrics(sentence)
+def get_image_lyrics(keywords, lyrics):
+    #lyrics = get_lyrics(sentence)
+    #print lyrics
     image_lyrics = []
+    #keywords = get_words.get_keywords(sentence)
+    print keywords
     for line in lyrics:
-        for keyword in get_word.get_keywords(sentence):
-            if keyword in line:
-                image_lyrycs.append(line)
-    lines = sentence.split('\n')
-    good_lines = []
+        for keyword in keywords:
+            if keyword in line[1]:
+                image_lyrics.append(line)
+                break
+    print image_lyrics
+    return image_lyrics
 
-    for line in lines:
-        pattern = re.compile('\[[0-9]{2}:[0-9]{2}.[0-9]{2}\]')
-        text = re.sub(pattern, '', line)
-        if not text:
-            time = line
-        else:
-            time = line.split(text)[0].strip()
-        time = time[1:-1]
-        text = text[1:]
-        good_lines.append((time, text))
-
-    return good_lines
+def get_image_lyrics_2(keywords, lyrics):
+    #lyrics = get_lyrics(sentence)
+    #print lyrics
+    image_lyrics = []
+    #keywords = get_words.get_keywords(sentence)
+    print keywords
+    for line in lyrics:
+        for subline in line[1].split(','):
+            subline = (line[0], subline)
+            for keyword in keywords:
+                if keyword in subline[1]:
+                    image_lyrics.append(subline)
+                    break
+    print image_lyrics
+    return image_lyrics
