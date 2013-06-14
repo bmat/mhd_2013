@@ -2,6 +2,7 @@ import os, web, json
 import pyella
 import re
 import random
+import datetime
 
 import gdata.photos.service
 from get_words import get_words, get_keywords
@@ -15,20 +16,22 @@ import simplejson
 
 cache = dict()
 
-def search_images(query):
+def search_images(query, rand=False):
     # Define search term
     searchTerm = query
     # Replace spaces ' ' in search term for '%20' in order to comply with request
-    if not searchTerm:
-        searchTerm = obj.artist + ' ' + obj.title
     searchTerm = searchTerm.replace(' ','%20')
 
     # Set count to 0
     images = []
     for i in range(0,1):
+        if rand:
+            start = random.randint(0,4)
+        else:
+            start = 0
         # Notice that the start changes for each iteration in order to request a new set of images for each loop
         url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 
-               'v=1.0&q='+searchTerm+'&start=0&userip=MyIP&imgtype=photo&imgsz=xxlarge')
+               'v=1.0&q='+searchTerm+'&start='+ str(start) + '&userip=MyIP&imgtype=photo&imgsz=xxlarge')
         print url
         request = urllib2.Request(url, None, {'Referer': 'testing'})
         response = urllib2.urlopen(request)
@@ -37,7 +40,8 @@ def search_images(query):
         results = simplejson.load(response)
         data = results['responseData']
         dataInfo = data['results']
-        print len(dataInfo)
+        print "Images for %s are %s"  %(searchTerm,  len(dataInfo))
+        random.seed(datetime.datetime.now())
         image = random.randint(0, len(dataInfo) -1)
 
         # Iterate for each result and get unescaped url
@@ -197,7 +201,7 @@ class search:
         print results
         print len(results)
         if results:
-            if next_song > len(results):
+            if next_song > len(results) - 1:
                 next_song = 0
             print "Ela results " ,len(results), next_song
             track = results[next_song]
@@ -253,12 +257,14 @@ class search:
                 #print 'keyword:', keyword
                 #phs = gd_client.SearchCommunityPhotos(keyword, limit='1')
                 #self.photos.extend([p.content.src for p in phs.entry])
+                rand = False
                 if not keyword:
                     keyword = track.get_title() + ' ' + track.get_artist_name()
+                    rand = True
                 print "Searching for %s" % keyword
-                if i > 10:
+                if i > 25:
                     break
-                photos = search_images(keyword)
+                photos = search_images(keyword, rand)
                 #random.shuffle(photos_array)
                 self.photos.append([item[0], photos])
             obj.set_photos(self.photos)
