@@ -1,15 +1,22 @@
 $def with (obj)
-      <header class="container-fluid">
-        <div style="height: 100%; width: 100%; margin: 10% 0 -20% -20px; display: float; position: absolute; background-image: url('/static/img/pattern.png')">
-          <div class="row-fluid">
-            <div class="span10">
-              $:obj.words
-              $:obj.lyric
+      <header class="container-fluid" style="padding: 0;">
+        <div style="height: 100%; width: 100%; margin: 0 0 0 0; display: float; position: absolute; background-image: url('/static/img/pattern.png'); background-position: bottom center; background-repeat: repeat-x;">
+          <div class="row-fluid" style="height: 100%;">
+            <div class="span12" style="overflow: hidden; height: 100%;">
+              <div id="info">Time</div>
+              <span style="font-size: 4em; font-weight: bold; background-color: black; color: yellow; padding: 30px; position: absolute; margin-top: 35%; margin-left: 10%; opacity: 0.8;" id="current_line_text">Text</span>
+              <span style="display: none;">$:obj.words</span>
+              <span style="display: none;">$:obj.lyric</span>
             </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Show player -->
+      <div id="jplayer_1"></div>
+
+
       </header>
 
       <div id="bg_images" style="display:none;">
