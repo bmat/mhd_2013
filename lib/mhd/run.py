@@ -10,20 +10,16 @@ from get_lyrics import get_lyrics
 import os
 import sys
 import time
-from urllib import FancyURLopener
 import urllib2
 import simplejson
 
+cache = dict()
 
 def search_images(query):
     # Define search term
     searchTerm = query
     # Replace spaces ' ' in search term for '%20' in order to comply with request
     searchTerm = searchTerm.replace(' ','%20')
-    # Start FancyURLopener with defined version 
-    class MyOpener(FancyURLopener):
-        version = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11'
-    myopener = MyOpener()
 
     # Set count to 0
     count= 0
@@ -93,6 +89,9 @@ class videclipr(object):
         self.bpm = None
         self.moods = None
         self.audio = None
+        self.isrc = None
+        self.label = None
+        self.duration = None
 
     def toJSON(self):
         j = dict()
@@ -103,6 +102,9 @@ class videclipr(object):
         j['artist'] = self.artist
         j['bpm'] = self.bpm
         j['moods'] = self.moods
+        j['isrc'] = self.isrc
+        j['label'] = self.label
+        j['duration'] = self.duration
         j['audio'] = self.audio.replace("/clips", "")
         return json.dumps(j)
 
@@ -174,6 +176,7 @@ class player:
 
 class search:
     def GET(self):
+        self.cache_key = None
         self.lyric = ""
         self.words = None
         self.error = None
@@ -185,6 +188,9 @@ class search:
         results = pyella.search_tracks(query, "fulltracks").get_next_page()
         if results:
             track = results[0]
+            self.cache_key = str(track.get_id())
+            if self.cache_key in cache:
+                    return cache[self.cache_key]
             print track.get_mbid(), track.get_title(), track.get_artist_name()
             print track.get_attribute("rhythm_bpm_value")
             print track.get_audio()
@@ -192,6 +198,11 @@ class search:
             obj.artist = track.get_artist_name()
             obj.bpm = track.get_attribute("rhythm_bpm_value")[0][1:]
             obj.audio = track.get_audio()
+            obj.isrc = track.get_attribute("track_isrc")
+            obj.duration = track.get_attribute('track_duration')
+            print obj.isrc
+            obj.label = track.get_attribute("track_label")
+            print obj.label
             links = track.get_links()
             mblink = links[3][1]
             if mblink:
@@ -232,7 +243,9 @@ class search:
                 obj.set_photos(self.photos)
         #main = unicode(render.main(self))
         #return return_composite_parts(main)
-        return obj.toJSON()
+        j = obj.toJSON()
+        cache[self.cache_key] = j;
+        return j
 
     def POST(self):
         main = unicode(render.main(self))
