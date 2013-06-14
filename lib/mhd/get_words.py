@@ -64,3 +64,15 @@ def get_words(sentence):
             good_time_lines[time].append((word, occur))
     print good_time_lines
     return good_time_lines
+
+def get_keywords(sentence):
+    clean_text = sentence.replace('\n', ' ')
+    tokens = nltk.word_tokenize(clean_text)
+    tagged = nltk.pos_tag(tokens)
+
+    good_list = []
+    for item in tagged:
+        if item[1] in ['NN', 'NNS', 'VB'] and item[0] not in ['[', ']']:
+            good_list.append(item[0])
+
+    return set(good_list)
