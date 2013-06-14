@@ -26,7 +26,7 @@ def search_images(query, rand=False):
     images = []
     for i in range(0,1):
         if rand:
-            start = random.randint(0,4)
+            start = random.randint(0,9)
         else:
             start = 0
         # Notice that the start changes for each iteration in order to request a new set of images for each loop
@@ -49,11 +49,15 @@ def search_images(query, rand=False):
         myUrl = dataInfo[image]
         print myUrl['unescapedUrl']
         images = myUrl['unescapedUrl']
+        parts = images.split('/')
+        parts[2] = parts[2]+'.nyud.net'
+        url_new = '/'.join(parts)
+
         #myopener.retrieve(myUrl['unescapedUrl'],str(count)+'.jpg')
 
         # Sleep for one second to prevent IP blocking from Google
         time.sleep(1)
-        return images
+        return url_new
     return images
 
 #Google Photo Service
