@@ -103,6 +103,7 @@ class videclipr(object):
         j['artist'] = self.artist
         j['bpm'] = self.bpm
         j['moods'] = self.moods
+        j['audio'] = self.audio.replace("/clips", "")
         return json.dumps(j)
 
     def setLyric(self, lyric):
@@ -189,7 +190,7 @@ class search:
             print track.get_audio()
             obj.title = track.get_title()
             obj.artist = track.get_artist_name()
-            obj.bpm = track.get_attribute("rhythm_bpm_value")
+            obj.bpm = track.get_attribute("rhythm_bpm_value")[0][1:]
             obj.audio = track.get_audio()
             links = track.get_links()
             mblink = links[3][1]
