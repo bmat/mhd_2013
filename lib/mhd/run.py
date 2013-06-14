@@ -4,8 +4,8 @@ import re
 import random
 
 import gdata.photos.service
-from get_words import get_words
-from get_lyrics import get_lyrics
+from get_words import get_words, get_keywords
+from get_lyrics import get_lyrics, get_image_lyrics
 
 import os
 import sys
@@ -22,11 +22,11 @@ def search_images(query):
     searchTerm = searchTerm.replace(' ','%20')
 
     # Set count to 0
-    count= 0
     images = []
     for i in range(0,1):
         # Notice that the start changes for each iteration in order to request a new set of images for each loop
-        url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 'v=1.0&q='+searchTerm+'&start='+str(i*4)+'&userip=MyIP')
+        url = ('https://ajax.googleapis.com/ajax/services/search/images?' + 
+               'v=1.0&q='+searchTerm+'&start=0&userip=MyIP&imgtype=photo&imgsz=xxlarge')
         print url
         request = urllib2.Request(url, None, {'Referer': 'testing'})
         response = urllib2.urlopen(request)
@@ -35,18 +35,19 @@ def search_images(query):
         results = simplejson.load(response)
         data = results['responseData']
         dataInfo = data['results']
+        print len(dataInfo)
+        image = random.randint(0, len(dataInfo) -1)
 
         # Iterate for each result and get unescaped url
-        for myUrl in dataInfo:
-            count = count + 1
-            if count > 1:
-                break;
-            print myUrl['unescapedUrl']
-            images.append(myUrl['unescapedUrl'])
-            #myopener.retrieve(myUrl['unescapedUrl'],str(count)+'.jpg')
+        #for myUrl in dataInfo:
+        myUrl = dataInfo[image]
+        print myUrl['unescapedUrl']
+        images = myUrl['unescapedUrl']
+        #myopener.retrieve(myUrl['unescapedUrl'],str(count)+'.jpg')
 
         # Sleep for one second to prevent IP blocking from Google
         time.sleep(1)
+        return images
     return images
 
 #Google Photo Service
@@ -92,6 +93,7 @@ class videclipr(object):
         self.isrc = None
         self.label = None
         self.duration = None
+        self.cover = None
 
     def toJSON(self):
         j = dict()
@@ -100,11 +102,14 @@ class videclipr(object):
         j['images'] = self.images
         j['title'] = self.title
         j['artist'] = self.artist
+        if self.bpm:
+            self.bpm = int(float(self.bpm))
         j['bpm'] = self.bpm
         j['moods'] = self.moods
         j['isrc'] = self.isrc
         j['label'] = self.label
         j['duration'] = self.duration
+        j['cover'] = self.cover
         j['audio'] = self.audio.replace("/clips", "")
         return json.dumps(j)
 
@@ -184,10 +189,16 @@ class search:
         obj = videclipr()
         data = web.input()
         query = data.get("q")
+        next_song = int(data.get('next'))
         print "Finding track %s" % query
         results = pyella.search_tracks(query, "fulltracks").get_next_page()
+        print results
+        print len(results)
         if results:
-            track = results[0]
+            if next_song > len(results):
+                next_song = 0
+            print "Ela results " ,len(results), next_song
+            track = results[next_song]
             self.cache_key = str(track.get_id())
             if self.cache_key in cache:
                     return cache[self.cache_key]
@@ -203,16 +214,17 @@ class search:
             print obj.isrc
             obj.label = track.get_attribute("track_label")
             print obj.label
+            obj.cover = track.get_image()
             links = track.get_links()
             mblink = links[3][1]
             if mblink:
                 #Here we have the MusicBrainz ID
                 mbid = get_mbi_from_url(mblink)
                 self.lyric = get_musixmatch_lyric(mbid)
-                print self.lyric
+                #print self.lyric
                 obj.setLyric(self.lyric)
             else:
-                print "No MusicBrainz ID found... trying with musixmatch"
+                #print "No MusicBrainz ID found... trying with musixmatch"
                 self.lyric = get_musixmatch_lyric_by_query(track.get_title())
                 obj.setLyric(self.lyric)
         else:
@@ -220,27 +232,32 @@ class search:
         if not self.lyric:
             self.error = "Can't found lyrics for this song. :("
         if self.lyric:
-            self.words = get_words(self.lyric)
+            self.time_lyrics = get_lyrics(self.lyric)
+            self.keywords = get_keywords(self.lyric)
+            self.image_lyrics = get_image_lyrics(self.keywords, self.time_lyrics)
+
+            #self.words = get_words(self.lyric)
             #self.lyric = re.sub(r"\n", "<br/>", self.lyric)
             self.photos = []
-            self.lyrics = get_lyrics(self.lyric)
+            #self.lyrics = get_lyrics(self.lyric)
             #for count, key in enumerate(self.words):
             #    word = self.words[key][0][0]
             #    print "Finding photos for word %s" % word
             #    phs = gd_client.SearchCommunityPhotos(word, limit='20')
             #    photos_array = [p.content.src for p in phs.entry]
             #    #photos_array = search_images(word)
-            for i, item in enumerate(self.lyrics):
-                keyword = item[1]
-                print 'keyword:', keyword
+            for i, item in enumerate(self.image_lyrics):
+                #keyword = item[1]
+                #print 'keyword:', keyword
                 #phs = gd_client.SearchCommunityPhotos(keyword, limit='1')
                 #self.photos.extend([p.content.src for p in phs.entry])
-                if i > 6:
+                print "Searching for %s" % item[1]
+                if i > 10:
                     break
-                photos_array = search_images(keyword)
-                random.shuffle(photos_array)
-                self.photos.extend(photos_array)
-                obj.set_photos(self.photos)
+                photos = search_images(item[1])
+                #random.shuffle(photos_array)
+                self.photos.append([item[0], photos])
+            obj.set_photos(self.photos)
         #main = unicode(render.main(self))
         #return return_composite_parts(main)
         j = obj.toJSON()
