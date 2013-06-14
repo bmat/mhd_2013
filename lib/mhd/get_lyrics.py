@@ -23,6 +23,7 @@ def get_lyrics(sentence):
         else:
             time = line.split(text)[0].strip()
         time = time[1:-1]
+        time = get_time_in_secs(time)
         text = text[1:]
         good_lines.append((time, text))
 
