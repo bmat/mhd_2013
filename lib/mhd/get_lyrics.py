@@ -48,8 +48,15 @@ def get_image_lyrics(keywords, lyrics):
             if keyword in line[1]:
                 image_lyrics.append(line)
                 break
-    print 'image_lyrics:', image_lyrics
-    return image_lyrics
+    old_time = 0
+    image_lyrics_2 = []
+    for line in image_lyrics[1:]:
+        time = line[0]
+        duration = time - old_time
+        old_time = time
+        image_lyrics_2.append((duration, line[1]))
+    print 'image_lyrics_2:', image_lyrics_2
+    return image_lyrics_2
 
 def get_image_lyrics_2(keywords, lyrics):
     #lyrics = get_lyrics(sentence)
