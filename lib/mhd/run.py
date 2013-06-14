@@ -165,6 +165,8 @@ class init:
 
 class player:
     def GET(self):
+        data = web.input()
+        self.query = data.get("q")
         main = unicode(render.main(self))
         return return_composite_parts(main)
 
