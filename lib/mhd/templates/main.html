@@ -3,10 +3,11 @@ $def with (obj)
         <div style="height: 100%; width: 100%; margin: 0 0 0 0; display: float; position: absolute; background-image: url('/static/img/pattern.png'); background-position: bottom center; background-repeat: repeat-x;">
           <div class="row-fluid" style="height: 100%;">
             <div class="span12" style="overflow: hidden; height: 100%;">
-              <div id="info">Time</div>
-              <span style="font-size: 4em; font-weight: bold; background-color: black; color: yellow; padding: 30px; position: absolute; margin-top: 35%; margin-left: 10%; opacity: 0.8;" id="current_line_text">Text</span>
+              <div id="info" style="display: none;">Time</div>
+              <span style="font-size: 4em; font-weight: bold; background-color: black; color: yellow; padding: 30px; position: absolute; margin-top: 35%; margin-left: 10%; opacity: 0.8; display: none;" id="current_line_text">Title</span>
               <span style="display: none;"></span>
               <span style="display: none;"></span>
+              <span id="query" style="display: none;">$:obj.query</span>
             </div>
             </div>
           </div>
