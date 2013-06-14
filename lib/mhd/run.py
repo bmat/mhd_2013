@@ -262,8 +262,8 @@ class search:
                     keyword = track.get_title() + ' ' + track.get_artist_name()
                     rand = True
                 print "Searching for %s" % keyword
-                if i > 25:
-                    break
+                #if i > 25:
+                #    break
                 photos = search_images(keyword, rand)
                 #random.shuffle(photos_array)
                 self.photos.append([item[0], photos])
