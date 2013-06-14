@@ -19,6 +19,8 @@ def search_images(query):
     # Define search term
     searchTerm = query
     # Replace spaces ' ' in search term for '%20' in order to comply with request
+    if not searchTerm:
+        searchTerm = obj.artist + ' ' + obj.title
     searchTerm = searchTerm.replace(' ','%20')
 
     # Set count to 0
@@ -247,14 +249,16 @@ class search:
             #    photos_array = [p.content.src for p in phs.entry]
             #    #photos_array = search_images(word)
             for i, item in enumerate(self.image_lyrics):
-                #keyword = item[1]
+                keyword = item[1]
                 #print 'keyword:', keyword
                 #phs = gd_client.SearchCommunityPhotos(keyword, limit='1')
                 #self.photos.extend([p.content.src for p in phs.entry])
-                print "Searching for %s" % item[1]
+                if not keyword:
+                    keyword = track.get_title() + ' ' + track.get_artist_name()
+                print "Searching for %s" % keyword
                 if i > 10:
                     break
-                photos = search_images(item[1])
+                photos = search_images(keyword)
                 #random.shuffle(photos_array)
                 self.photos.append([item[0], photos])
             obj.set_photos(self.photos)
