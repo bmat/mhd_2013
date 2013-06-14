@@ -73,7 +73,8 @@ abspath = os.path.dirname(__file__)
 os.chdir(abspath)
 
 urls = (
-    '/', 'search',
+    '/', 'init',
+    '/search', 'search'
     )
 app = web.application(urls, globals())
 
@@ -122,6 +123,11 @@ def return_composite_parts(main):
     footer = unicode(render.footer())
     return render.layout(header, main, footer)
 
+
+class init:
+    def GET(self):
+        main = unicode(render.start(self))
+        return return_composite_parts(main)
 
 class search:
     def GET(self):
