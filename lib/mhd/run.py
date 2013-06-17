@@ -86,7 +86,7 @@ urls = (
     )
 app = web.application(urls, globals())
 
-apikey = "905e7eec68193e3f0a81a75591b4a518"
+apikey = "3502733c4248a78ef95c8156ca38fe32"
 
 
 class videclipr(object):
@@ -151,6 +151,7 @@ def get_musixmatch_lyric(mbid, type_track="track_mbid"):
     url = ("http://api.musixmatch.com/ws/1.1/track.subtitle.get"
             "?%s=%s&"
            "apikey=%s&format=json" % (type_track, mbid, apikey))
+    print url
     json = request_to_json(url)
     print json
     #TODO: Check if the message is correct
@@ -163,6 +164,7 @@ def get_musixmatch_lyric_by_query(query):
     url = ("http://api.musixmatch.com/ws/1.1/"
             "track.search?q=%s&f_has_lyrics=1&format=json&apikey=%s"
            % (query, apikey))
+    print url
     json = request_to_json(url)
     if json['message']['header']['status_code'] in [404, 401]:
         return None
